@@ -1,0 +1,7 @@
+## Interface: 30400
+## Title: ThorLockout
+## Notes: ThorLockout TODO.
+## Author: Thorinson
+## SavedVariables: ThorLockoutDB
+
+includes.xml
