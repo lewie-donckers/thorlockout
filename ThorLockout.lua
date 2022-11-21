@@ -1,3 +1,9 @@
+-- TODO
+-- some form of caching perhaps for processing
+-- documentation
+-- testing (resetTime)
+-- VoA detection #bosses somehow
+
 -- CONSTANTS
 
 local COLOR_LOG = "|cffaad372"
@@ -174,8 +180,7 @@ function ThorLockout:GetRaidLockouts()
 end
 
 function ThorLockout:ProcessData()
-    -- TODO some kind of caching
-    -- TODO remove old values
+    local now = GetServerTime()
 
     local characters = Characters:New()
     for id, data in pairs(self.db.global.characters) do
@@ -187,11 +192,13 @@ function ThorLockout:ProcessData()
     local lockouts = {}
     for _, character in pairs(characters.sorted) do
         for _, lockout in pairs(self.db.global.characters[character.id].lockouts) do
-            raid = Raid:New(lockout.name, lockout.size, lockout.isHeroic, lockout.encounters)
-            if raids:Add(raid) then
-                lockouts[raid.id] = {}
+            if lockout.resetTime > now then
+                raid = Raid:New(lockout.name, lockout.size, lockout.isHeroic, lockout.encounters)
+                if raids:Add(raid) then
+                    lockouts[raid.id] = {}
+                end
+                lockouts[raid.id][character.id] = lockout.progress
             end
-            lockouts[raid.id][character.id] = lockout.progress
         end
     end
 
