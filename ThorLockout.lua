@@ -1,21 +1,15 @@
--- TODO
--- some form of caching perhaps for processing
--- documentation
--- testing (resetTime)
--- VoA detection #bosses somehow
-
 -- CONSTANTS
 
-local COLOR_LOG = "|cffaad372"
-local COLOR_DEBUG = "|cffff7f00"
+local COLOR_LOG = "|cffff7f00"
 local COLOR_GOLD = "|cfffed100"
 local COLOR_GREEN = "|cff00ff00"
 local COLOR_ORANGE = "|cffff7f00"
 local COLOR_RESUME = "|r"
 
 local ADDON_NAME = "ThorLockout"
-local ADDON_VERSION = "1.0"
-local ADDON_IDENTIFIER = ADDON_NAME .. " " .. ADDON_VERSION .. " by Thorinson"
+local ADDON_VERSION = "1.0.0"
+local ADDON_AUTHOR = "Thorinsøn"
+local ADDON_IDENTIFIER = ADDON_NAME .. " " .. ADDON_VERSION
 
 local DATABASE_DEFAULTS = {
 	global = {
@@ -34,12 +28,17 @@ local function FormatColor(color, message, ...)
     return color .. string.format(message, ...) .. COLOR_RESUME
 end
 
+local function FormatColorClass(class, message, ...)
+    local _, _, _, color = GetClassColor(class)
+    return FormatColor("|c" .. color, message, ...)
+end
+
 local function Log(message, ...)
     print(FormatColor(COLOR_LOG, message, ...))
 end
 
 local function LogDebug(message, ...)
-    print(FormatColor(COLOR_DEBUG, "[" .. ADDON_NAME .. "][DBG] " .. message, ...))
+    -- Log("[" .. ADDON_NAME .. "][DBG] " .. message, ...)
 end
 
 local function RoundToNearestHour(seconds)
@@ -77,8 +76,7 @@ function Character:New(id, class)
     result.id = id
     _, result.name = strsplit('.', result.id)
     result.class = class
-    local _, _, _, color = GetClassColor(result.class)
-    result.colorName = FormatColor("|c"..color, result.name)
+    result.colorName = FormatColorClass(result.class, result.name)
     return result
 end
 
@@ -183,22 +181,25 @@ function ThorLockout:ProcessData()
     local now = GetServerTime()
 
     local characters = Characters:New()
-    for id, data in pairs(self.db.global.characters) do
-        class = data.class
-        characters:Add(Character:New(id, class))
-    end
-
     local raids = Raids:New()
     local lockouts = {}
-    for _, character in pairs(characters.sorted) do
-        for _, lockout in pairs(self.db.global.characters[character.id].lockouts) do
+
+    for characterId, character in pairs(self.db.global.characters) do
+        local characterHasLockouts = false
+
+        for _, lockout in pairs(character.lockouts) do
             if lockout.resetTime > now then
                 raid = Raid:New(lockout.name, lockout.size, lockout.isHeroic, lockout.encounters)
                 if raids:Add(raid) then
                     lockouts[raid.id] = {}
                 end
-                lockouts[raid.id][character.id] = lockout.progress
+                characterHasLockouts = true
+                lockouts[raid.id][characterId] = lockout.progress
             end
+        end
+
+        if characterHasLockouts then
+            characters:Add(Character:New(characterId, character.class))
         end
     end
 
@@ -273,7 +274,7 @@ function ThorLockout:UpdateTooltip()
     local nrColumns = 1 + nrCharacters
 
     self.tooltip:SetColumnLayout(nrColumns);
-    self.tooltip:AddHeader("ThorLockout");
+    self.tooltip:AddHeader(ADDON_IDENTIFIER);
     self.tooltip:AddSeparator();
 
     if nrCharacters == 0 or nrRaids == 0 then
@@ -329,12 +330,12 @@ function ThorLockout:OnInitialize()
 
     self:TriggerInstanceInfo()
 
-    Log(ADDON_IDENTIFIER .. " initialized")
+    Log(ADDON_IDENTIFIER .. " by " .. FormatColorClass("HUNTER", ADDON_AUTHOR) ..  " initialized")
 end
 
 function ThorLockout:Start()
     ThorLockout:RegisterEvent("PLAYER_ENTERING_WORLD", "OnInitialize")
-    Log(ADDON_IDENTIFIER .. " loaded")
+    Log(ADDON_IDENTIFIER .. " by " .. FormatColorClass("HUNTER", ADDON_AUTHOR) ..  " loaded")
 end
 
 -- Start the addon
