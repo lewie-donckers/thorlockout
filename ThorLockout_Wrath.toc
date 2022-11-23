@@ -1,5 +1,5 @@
 ## Interface: 30400
-## Title: ThorLockout 1.1.0
+## Title: ThorLockout 1.1.1
 ## Notes: ThorLockout is a DataBroker addon that keeps track of the raid lockouts of your characters.
 ## Author: Thorinsøn
 ## SavedVariables: ThorLockoutDB

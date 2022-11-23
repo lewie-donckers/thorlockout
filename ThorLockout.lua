@@ -7,7 +7,7 @@ local COLOR_ORANGE = "|cffff7f00"
 local COLOR_RESUME = "|r"
 
 local ADDON_NAME = "ThorLockout"
-local ADDON_VERSION = "1.1.0"
+local ADDON_VERSION = "1.1.1"
 local ADDON_AUTHOR = "Thorinsøn"
 
 local DATABASE_DEFAULTS = {
