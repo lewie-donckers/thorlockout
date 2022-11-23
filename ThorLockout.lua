@@ -7,9 +7,8 @@ local COLOR_ORANGE = "|cffff7f00"
 local COLOR_RESUME = "|r"
 
 local ADDON_NAME = "ThorLockout"
-local ADDON_VERSION = "1.0.0"
+local ADDON_VERSION = "1.1.0"
 local ADDON_AUTHOR = "Thorinsøn"
-local ADDON_IDENTIFIER = ADDON_NAME .. " " .. ADDON_VERSION
 
 local DATABASE_DEFAULTS = {
 	global = {
@@ -19,7 +18,10 @@ local DATABASE_DEFAULTS = {
 				lockouts = {}
 			}
 		}
-	}
+	},
+    char = {
+        minimap = { hide = false }
+    }
 }
 
 -- FUNCTIONS
@@ -34,11 +36,11 @@ local function FormatColorClass(class, message, ...)
 end
 
 local function Log(message, ...)
-    print(FormatColor(COLOR_LOG, message, ...))
+    print(FormatColor(COLOR_LOG, "[" .. ADDON_NAME .. "] " .. message, ...))
 end
 
 local function LogDebug(message, ...)
-    -- Log("[" .. ADDON_NAME .. "][DBG] " .. message, ...)
+    -- Log("[DBG] " .. message, ...)
 end
 
 local function RoundToNearestHour(seconds)
@@ -156,7 +158,7 @@ end
 
 ----- CLASS - ThorLockout
 
-local ThorLockout = LibStub("AceAddon-3.0"):NewAddon("ThorLockout", "AceEvent-3.0")
+local ThorLockout = LibStub("AceAddon-3.0"):NewAddon(ADDON_NAME, "AceEvent-3.0", "AceConsole-3.0")
 
 function ThorLockout:GetRaidLockouts()
     local now = GetServerTime()
@@ -273,7 +275,7 @@ function ThorLockout:UpdateTooltip()
     local nrColumns = 1 + nrCharacters
 
     self.tooltip:SetColumnLayout(nrColumns);
-    self.tooltip:AddHeader(ADDON_IDENTIFIER);
+    self.tooltip:AddHeader(ADDON_NAME .. " " .. ADDON_VERSION);
     self.tooltip:AddSeparator();
 
     if nrCharacters == 0 or nrRaids == 0 then
@@ -300,6 +302,42 @@ function ThorLockout:TriggerInstanceInfo()
     RequestRaidInfo()
 end
 
+function ThorLockout:LogCommandUsage(isError)
+    if isError then
+        Log("invalid command")
+    end
+
+    Log("use \"/thorlockout minimap enable\" to enable the minimap button")
+    Log("use \"/thorlockout minimap disable\" to disable the minimap button")
+end
+
+function ThorLockout:OnChatCommand(str)
+    LogDebug("OnChatCommand")
+
+    local action, value, _ = self:GetArgs(str, 2)
+
+    if action == nil then
+        return self:LogCommandUsage(false)
+    end
+
+    if action ~= "minimap" then
+        return self:LogCommandUsage(true)
+    end
+
+    if value == "enable" then
+        self.db.char.minimap.hide = false
+        self.dbicon:Show(ADDON_NAME)
+        Log("minimap button enabled")
+    elseif value == "disable" then
+        LogDebug("OnChatCommand - minimap disable")
+        self.db.char.minimap.hide = true
+        self.dbicon:Hide(ADDON_NAME)
+        Log("minimap button disabled")
+    else
+        return self:LogCommandUsage(true)
+    end
+end
+
 function ThorLockout:OnEnable()
     LogDebug("OnEnable")
 
@@ -319,6 +357,11 @@ function ThorLockout:OnEnable()
     self.ldb.OnEnter = function(anchor) self:OnLdbEnter(anchor) end
     self.ldb.OnLeave = function() self:OnLdbLeave() end
     
+    self.dbicon = LibStub("LibDBIcon-1.0")
+    self.dbicon:Register(ADDON_NAME, self.ldb, self.db.char.minimap)
+
+    self:RegisterChatCommand("thorlockout", "OnChatCommand")
+
     self:RegisterEvent("BOSS_KILL", "OnEventBossKill")
     self:RegisterEvent("INSTANCE_LOCK_START", "OnEventInstanceLockStart")
     self:RegisterEvent("INSTANCE_LOCK_STOP", "OnEventInstanceLockStop")
@@ -327,5 +370,6 @@ function ThorLockout:OnEnable()
 
     self:TriggerInstanceInfo()
 
-    Log(ADDON_IDENTIFIER .. " by " .. FormatColorClass("HUNTER", ADDON_AUTHOR) ..  " initialized")
+    Log("version " .. ADDON_VERSION .. " by " .. FormatColorClass("HUNTER", ADDON_AUTHOR) ..  " initialized")
+    Log("use \"/thorlockout\" to set options")
 end
