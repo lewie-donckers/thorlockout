@@ -156,8 +156,7 @@ end
 
 ----- CLASS - ThorLockout
 
-local ThorLockout = {}
-LibStub("AceEvent-3.0"):Embed(ThorLockout)
+local ThorLockout = LibStub("AceAddon-3.0"):NewAddon("ThorLockout", "AceEvent-3.0")
 
 function ThorLockout:GetRaidLockouts()
     local now = GetServerTime()
@@ -301,10 +300,8 @@ function ThorLockout:TriggerInstanceInfo()
     RequestRaidInfo()
 end
 
-function ThorLockout:OnInitialize()
-    LogDebug("OnInitialize")
-
-    self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+function ThorLockout:OnEnable()
+    LogDebug("OnEnable")
 
     self.charId = GetCharacterId()
     self.charClass = GetCharacterClass()
@@ -332,12 +329,3 @@ function ThorLockout:OnInitialize()
 
     Log(ADDON_IDENTIFIER .. " by " .. FormatColorClass("HUNTER", ADDON_AUTHOR) ..  " initialized")
 end
-
-function ThorLockout:Start()
-    ThorLockout:RegisterEvent("PLAYER_ENTERING_WORLD", "OnInitialize")
-    Log(ADDON_IDENTIFIER .. " by " .. FormatColorClass("HUNTER", ADDON_AUTHOR) ..  " loaded")
-end
-
--- Start the addon
-
-ThorLockout:Start()
