@@ -4,4 +4,4 @@
 ## Author: Thorinsøn
 ## SavedVariables: ThorLockoutDB
 
-includes.xml
+ThorLockout.xml
